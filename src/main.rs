@@ -1,13 +1,14 @@
 use std::os::raw::c_void;
 
-extern crate libloading as lib;
+extern crate libloading;
 
+mod read_plugin;
+use read_plugin::read_plugin;
 mod c_plugin_factory;
 use c_plugin_factory::CPluginFactory;
 
 const LIBRARY: &str = "so_files/adelay.so";
 
-type CountClasses = extern fn(*mut IPluginFactory) -> i32;
 type QueryInterface = extern fn(*mut IPluginFactory, *const i8, *mut *mut c_void) -> i32;
 
 #[allow(non_snake_case)]
@@ -76,6 +77,13 @@ fn query(plugin: *mut IPluginFactory, query_interface: QueryInterface, iid: [u32
 }
 
 fn main() {
+    let plugin_factory = read_plugin(LIBRARY).unwrap();
+    println!("{:?}", unsafe{plugin_factory.count_classes()});
+
+
+
+
+    /*)
     let library = lib::Library::new(LIBRARY).unwrap();
 
     unsafe {
@@ -83,9 +91,9 @@ fn main() {
             library.get(b"GetPluginFactory").unwrap();
         let c_plugin_factory = get_plugin_factory();
 
-        let public_plugin_factory = CPluginFactory::new(c_plugin_factory);
+        let plugin_factory = CPluginFactory::new(c_plugin_factory);
 
-        println!("{}", public_plugin_factory.count_classes());
+        println!("{}", plugin_factory.count_classes());
 
         // IPluginFactory's concrete type is a Steinberg::CPluginFactory.
         // Steinberg::CPluginFactory has the following vtable:
@@ -111,4 +119,5 @@ fn main() {
         query(c_plugin_factory, query_interface, IUPDATEMANAGER_IID.id);
         */
     }
+    */
 }
