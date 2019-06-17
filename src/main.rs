@@ -6,10 +6,11 @@ mod read_plugin;
 use read_plugin::read_plugin;
 mod c_plugin_factory;
 use c_plugin_factory::CPluginFactory;
+mod interfaces;
+use interfaces::f_unknown::{FUnknown};
+use crate::interfaces::i_plugin_factory::IPluginFactory;
 
 const LIBRARY: &str = "so_files/adelay.so";
-
-type QueryInterface = extern fn(*mut IPluginFactory, *const i8, *mut *mut c_void) -> i32;
 
 #[allow(non_snake_case)]
 #[repr(C)]
@@ -33,91 +34,23 @@ const IUPDATEMANAGER_IID: TUID = TUID {
     id: [0x0C780B03, 0x8D41E6D6, 0xC20BE08C, 0xD434C809],
 };
 
-#[allow(non_snake_case)]
-#[repr(C)]
-struct IPluginFactory {
-    pub vtable: *mut IPluginFactoryVTable,
-}
-
-#[allow(non_snake_case)]
-#[repr(C)]
-struct IPluginFactoryVTable {
-    pub values: [*mut c_void; 7],
-}
-
-fn query(plugin: *mut IPluginFactory, query_interface: QueryInterface, iid: [u32; 4]) {
-    unsafe {
-        let mut vtable_ptr: *mut c_void = std::mem::uninitialized();
-        println!("vtable ptr: {:016x}", vtable_ptr as usize);
-
-        let result = query_interface(
-            plugin,
-            iid.as_ptr() as *const i8,
-            &mut vtable_ptr as *mut *mut c_void
-        );
-
-        println!("result: {}", result);
-        if result != 0 {
-            println!();
-            return;
-        }
-
-        let asdf1: *const IPluginFactoryVTable = vtable_ptr as *const IPluginFactoryVTable;
-        for v in 0..7 {
-            println!("asdf1: {:016x}", (*asdf1).values[v] as usize);
-        }
-
-        let asdf2: *const IPluginFactoryVTable = (*asdf1).values[0] as *const IPluginFactoryVTable;
-        for v in 0..7 {
-            println!("vtable {}: {:016x}", v, (*asdf2).values[v] as usize);
-        }
-
-        println!();
-    }
-}
-
 fn main() {
     let plugin_factory = read_plugin(LIBRARY).unwrap();
     println!("{:?}", unsafe{plugin_factory.count_classes()});
 
-
-
-
-    /*)
-    let library = lib::Library::new(LIBRARY).unwrap();
-
     unsafe {
-        let get_plugin_factory: lib::Symbol<unsafe extern fn() -> *const c_void> =
-            library.get(b"GetPluginFactory").unwrap();
-        let c_plugin_factory = get_plugin_factory();
+        plugin_factory.hello();
 
-        let plugin_factory = CPluginFactory::new(c_plugin_factory);
+        let obj1 = plugin_factory.query_interface::<FUnknown>();
+        obj1.hello();
 
-        println!("{}", plugin_factory.count_classes());
+        let obj2 = plugin_factory.query_interface::<IPluginFactory>();
+        obj2.hello();
 
-        // IPluginFactory's concrete type is a Steinberg::CPluginFactory.
-        // Steinberg::CPluginFactory has the following vtable:
-        // 0: FUnknown::queryInterface
-        // 1: FUnknown::addRef
-        // 2: FUnknown::release
-        // 3: IPluginFactory::getFactoryInfo
-        // 4: IPluginFactory::countClasses
-        // 5: IPluginFactory::getClassInfo
-        // 6: IPluginFactory::createInstance
-        // ...
+        let obj3 = plugin_factory.query_interface::<FUnknown>();
+        obj3.hello();
 
-        /*
-
-        let count_classes: CountClasses = std::mem::transmute((*(*c_plugin_factory).vtable).values[4]);
-        println!("classes: {}", count_classes(c_plugin_factory));
-
-        let query_interface: QueryInterface = std::mem::transmute((*(*c_plugin_factory).vtable).values[0]);
-
-        query(c_plugin_factory, query_interface, IPLUGINFACTORY_IID.id);
-        query(c_plugin_factory, query_interface, IPLUGINFACTORY3_IID.id);
-        query(c_plugin_factory, query_interface, FUNKNOWN_IID.id);
-        query(c_plugin_factory, query_interface, IUPDATEMANAGER_IID.id);
-        */
+        let obj4 = plugin_factory.query_interface::<IPluginFactory>();
+        obj4.hello();
     }
-    */
 }

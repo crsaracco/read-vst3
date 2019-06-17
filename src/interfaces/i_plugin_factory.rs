@@ -1,18 +1,12 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
-use crate::interfaces::f_unknown::{FUnknown, QueryInterface};
+use crate::interfaces::f_unknown::QueryInterface;
 
-pub struct CPluginFactory {
-    inner: *const CPluginFactoryImpl,
+pub struct IPluginFactory {
+    inner: *const IPluginFactoryImpl,
 }
 
-impl CPluginFactory {
-    pub fn new(inner: *const c_void) -> Self {
-        Self {
-            inner: inner as *const CPluginFactoryImpl,
-        }
-    }
-
+impl IPluginFactory {
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
         let mut vtable_ptr: *mut c_void = std::mem::uninitialized();
         let tuid = T::get_id();
@@ -22,17 +16,25 @@ impl CPluginFactory {
             tuid.as_ptr() as *const i8,
             vtable_ptr as *mut *mut c_void
         );
-        
+
         let obj = T::new(vtable_ptr);
         obj
     }
 
-    pub unsafe fn count_classes(&self) -> i32 {
-        ((*(*self.inner).vtable).count_classes)(self.inner)
-    }
-
     pub fn hello(&self) {
-        println!("Hello from CPluginFactory!");
+        println!("Hello from IPluginFactory!");
+    }
+}
+
+impl Interface for IPluginFactory {
+    fn new(inner: *const c_void) -> Self {
+        Self {
+            inner: inner as *const IPluginFactoryImpl,
+        }
+    }
+
+    fn get_id() -> [u32; 4] {
+        [0x1C814D7A, 0x1F4A1152, 0xEED2D9AE, 0x9FBF430B]
     }
 }
 
@@ -40,13 +42,13 @@ impl CPluginFactory {
 
 #[derive(Debug)]
 #[repr(C)]
-struct CPluginFactoryImpl {
-    vtable: *const CPluginFactoryVTable,
+struct IPluginFactoryImpl {
+    vtable: *const IPluginFactoryVTable,
 }
 
 #[derive(Debug)]
 #[repr(C)]
-struct CPluginFactoryVTable {
+struct IPluginFactoryVTable {
     // FUnknown
     query_interface: QueryInterface,
     f1: *const c_void, // TODO
@@ -54,14 +56,7 @@ struct CPluginFactoryVTable {
 
     // IPluginFactory
     f3: *const c_void, // TODO
-    count_classes: extern fn(*const CPluginFactoryImpl) -> i32,
+    f4: *const c_void, // TODO
     f5: *const c_void, // TODO
     f6: *const c_void, // TODO
-
-    // IPluginFactory2
-    f7: *const c_void, // TODO
-
-    // IPluginFactory3
-    f8: *const c_void, // TODO
-    f9: *const c_void, // TODO
 }
