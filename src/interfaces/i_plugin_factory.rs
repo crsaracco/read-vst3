@@ -14,7 +14,7 @@ impl IPluginFactory {
         let result = ((*(*self.inner).vtable).query_interface)(
             self.inner as *const c_void,
             tuid.as_ptr() as *const i8,
-            vtable_ptr as *mut *mut c_void
+            &mut vtable_ptr as *mut *mut c_void
         );
 
         let obj = T::new(vtable_ptr);
