@@ -11,7 +11,7 @@ const LIBRARY: &str = "so_files/adelay.so";
 
 fn main() {
     let plugin_factory = read_plugin(LIBRARY).unwrap();
-    println!("{:?}", unsafe{plugin_factory.count_classes()});
+    println!("{:?}", unsafe { plugin_factory.count_classes() });
 
     unsafe {
         plugin_factory.hello();

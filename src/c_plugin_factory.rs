@@ -1,6 +1,6 @@
-use std::os::raw::c_void;
-use crate::interfaces::Interface;
 use crate::interfaces::f_unknown;
+use crate::interfaces::Interface;
+use std::os::raw::c_void;
 
 pub struct CPluginFactory {
     inner: *const CPluginFactoryImpl,
@@ -14,7 +14,10 @@ impl CPluginFactory {
     }
 
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        f_unknown::query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+        f_unknown::query_interface_impl(
+            self.inner as *const c_void,
+            (*(*self.inner).vtable).query_interface,
+        )
     }
 
     pub unsafe fn add_ref(&self) -> u32 {
@@ -34,8 +37,6 @@ impl CPluginFactory {
     }
 }
 
-
-
 #[derive(Debug)]
 #[repr(C)]
 struct CPluginFactoryImpl {
@@ -52,7 +53,7 @@ struct CPluginFactoryVTable {
 
     // IPluginFactory
     f3: *const c_void, // TODO
-    count_classes: extern fn(*const CPluginFactoryImpl) -> i32,
+    count_classes: extern "C" fn(*const CPluginFactoryImpl) -> i32,
     f5: *const c_void, // TODO
     f6: *const c_void, // TODO
 

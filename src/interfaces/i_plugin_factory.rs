@@ -1,12 +1,8 @@
-use std::os::raw::c_void;
-use crate::interfaces::Interface;
 use crate::interfaces::f_unknown;
-
-
+use crate::interfaces::Interface;
+use std::os::raw::c_void;
 
 // Functions defined for all types compatible with IPluginFactory
-
-
 
 // IPluginFactory struct
 
@@ -16,7 +12,10 @@ pub struct IPluginFactory {
 
 impl IPluginFactory {
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        f_unknown::query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+        f_unknown::query_interface_impl(
+            self.inner as *const c_void,
+            (*(*self.inner).vtable).query_interface,
+        )
     }
 
     pub unsafe fn add_ref(&self) -> u32 {
@@ -43,8 +42,6 @@ impl Interface for IPluginFactory {
         [0x1C814D7A, 0x1F4A1152, 0xEED2D9AE, 0x9FBF430B]
     }
 }
-
-
 
 // Private implementation
 
