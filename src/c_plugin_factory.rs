@@ -1,6 +1,6 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
-use crate::interfaces::f_unknown::{QueryInterfaceFnType, query_interface_impl};
+use crate::interfaces::f_unknown;
 
 pub struct CPluginFactory {
     inner: *const CPluginFactoryImpl,
@@ -14,7 +14,15 @@ impl CPluginFactory {
     }
 
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+        f_unknown::query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+    }
+
+    pub unsafe fn add_ref(&self) -> u32 {
+        f_unknown::add_ref_impl(self.inner as *const c_void, (*(*self.inner).vtable).add_ref)
+    }
+
+    pub unsafe fn release(&self) -> u32 {
+        f_unknown::release_impl(self.inner as *const c_void, (*(*self.inner).vtable).release)
     }
 
     pub unsafe fn count_classes(&self) -> i32 {
@@ -38,9 +46,9 @@ struct CPluginFactoryImpl {
 #[repr(C)]
 struct CPluginFactoryVTable {
     // FUnknown
-    query_interface: QueryInterfaceFnType,
-    f1: *const c_void, // TODO
-    f2: *const c_void, // TODO
+    query_interface: f_unknown::QueryInterfaceFnType,
+    add_ref: f_unknown::AddRefFnType,
+    release: f_unknown::ReleaseFnType,
 
     // IPluginFactory
     f3: *const c_void, // TODO

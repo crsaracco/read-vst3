@@ -1,6 +1,14 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
-use crate::interfaces::f_unknown::{QueryInterfaceFnType, query_interface_impl};
+use crate::interfaces::f_unknown;
+
+
+
+// Functions defined for all types compatible with IPluginFactory
+
+
+
+// IPluginFactory struct
 
 pub struct IPluginFactory {
     inner: *const IPluginFactoryImpl,
@@ -8,7 +16,15 @@ pub struct IPluginFactory {
 
 impl IPluginFactory {
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+        f_unknown::query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+    }
+
+    pub unsafe fn add_ref(&self) -> u32 {
+        f_unknown::add_ref_impl(self.inner as *const c_void, (*(*self.inner).vtable).add_ref)
+    }
+
+    pub unsafe fn release(&self) -> u32 {
+        f_unknown::release_impl(self.inner as *const c_void, (*(*self.inner).vtable).release)
     }
 
     pub fn hello(&self) {
@@ -30,6 +46,8 @@ impl Interface for IPluginFactory {
 
 
 
+// Private implementation
+
 #[derive(Debug)]
 #[repr(C)]
 struct IPluginFactoryImpl {
@@ -40,9 +58,9 @@ struct IPluginFactoryImpl {
 #[repr(C)]
 struct IPluginFactoryVTable {
     // FUnknown
-    query_interface: QueryInterfaceFnType,
-    f1: *const c_void, // TODO
-    f2: *const c_void, // TODO
+    query_interface: f_unknown::QueryInterfaceFnType,
+    add_ref: f_unknown::AddRefFnType,
+    release: f_unknown::ReleaseFnType,
 
     // IPluginFactory
     f3: *const c_void, // TODO

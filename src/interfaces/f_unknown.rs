@@ -2,8 +2,8 @@ use std::os::raw::c_void;
 use crate::interfaces::Interface;
 
 
-// Functions defined for all types compatible with FUnknown
 
+// Functions defined for all types compatible with FUnknown
 
 pub type QueryInterfaceFnType = extern fn(*const c_void, *const i8, *mut *mut c_void) -> i32;
 pub unsafe fn query_interface_impl<T: Interface>(this: *const c_void, func: QueryInterfaceFnType) -> T {
@@ -31,8 +31,8 @@ pub unsafe fn release_impl(this: *const c_void, func: ReleaseFnType) -> u32 {
 }
 
 
-// FUnknown struct
 
+// FUnknown struct
 
 pub struct FUnknown {
     inner: *const FUnknownImpl,
@@ -69,8 +69,8 @@ impl Interface for FUnknown {
 }
 
 
-// Private implementation
 
+// Private implementation
 
 #[derive(Debug)]
 #[repr(C)]
