@@ -1,6 +1,7 @@
 use crate::interfaces::f_unknown;
 use crate::interfaces::Interface;
 use std::os::raw::c_void;
+use crate::interfaces::i_plugin_factory;
 
 pub struct CPluginFactory {
     inner: *const CPluginFactoryImpl,
@@ -28,8 +29,25 @@ impl CPluginFactory {
         f_unknown::release_impl(self.inner as *const c_void, (*(*self.inner).vtable).release)
     }
 
+    // TODO: Create PFactoryInfo and PClassInfo to work with get_factory_info and get_class_info
+    pub unsafe fn get_factory_info(&self) -> i32 {
+        // TODO
+        unimplemented!();
+    }
+
     pub unsafe fn count_classes(&self) -> i32 {
-        ((*(*self.inner).vtable).count_classes)(self.inner)
+        i_plugin_factory::count_classes_impl(self.inner as *const c_void, (*(*self.inner).vtable).count_classes)
+    }
+
+    pub unsafe fn get_class_info(&self) -> i32 {
+        // TODO
+        unimplemented!();
+    }
+
+    // TODO: Figure out why there's an "FIDString" type, and replicate it in rust to work with create_instance
+    pub unsafe fn create_instance(&self) -> i32 {
+        // TODO
+        unimplemented!();
     }
 
     pub fn hello(&self) {
@@ -52,10 +70,10 @@ struct CPluginFactoryVTable {
     release: f_unknown::ReleaseFnType,
 
     // IPluginFactory
-    f3: *const c_void, // TODO
-    count_classes: extern "C" fn(*const CPluginFactoryImpl) -> i32,
-    f5: *const c_void, // TODO
-    f6: *const c_void, // TODO
+    get_factory_info: i_plugin_factory::GetFactoryInfoFnType,
+    count_classes: i_plugin_factory::CountClassesFnType,
+    get_class_info: i_plugin_factory::GetClassInfoFnType,
+    create_instance: i_plugin_factory::CreateInstanceFnType,
 
     // IPluginFactory2
     f7: *const c_void, // TODO
