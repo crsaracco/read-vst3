@@ -1,22 +1,13 @@
-use std::os::raw::c_void;
-
 extern crate libloading;
 
 mod read_plugin;
 use read_plugin::read_plugin;
 mod c_plugin_factory;
-use c_plugin_factory::CPluginFactory;
 mod interfaces;
 use interfaces::f_unknown::FUnknown;
 use interfaces::i_plugin_factory::IPluginFactory;
 
 const LIBRARY: &str = "so_files/adelay.so";
-
-#[allow(non_snake_case)]
-#[repr(C)]
-struct TUID {
-    id: [u32; 4],
-}
 
 fn main() {
     let plugin_factory = read_plugin(LIBRARY).unwrap();

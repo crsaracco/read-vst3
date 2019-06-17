@@ -1,6 +1,6 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
-use crate::interfaces::f_unknown::{FUnknown, QueryInterface};
+use crate::interfaces::f_unknown::{eryInterfaceFnType, query_interface_impl};
 
 pub struct CPluginFactory {
     inner: *const CPluginFactoryImpl,
@@ -14,17 +14,7 @@ impl CPluginFactory {
     }
 
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        let mut vtable_ptr: *mut c_void = std::mem::uninitialized();
-        let tuid = T::get_id();
-
-        let result = ((*(*self.inner).vtable).query_interface)(
-            self.inner as *const c_void,
-            tuid.as_ptr() as *const i8,
-            &mut vtable_ptr as *mut *mut c_void
-        );
-
-        let obj = T::new(vtable_ptr);
-        obj
+        query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
     }
 
     pub unsafe fn count_classes(&self) -> i32 {
@@ -48,7 +38,7 @@ struct CPluginFactoryImpl {
 #[repr(C)]
 struct CPluginFactoryVTable {
     // FUnknown
-    query_interface: QueryInterface,
+    query_interface: QueryInterfaceFnType,
     f1: *const c_void, // TODO
     f2: *const c_void, // TODO
 

@@ -1,7 +1,28 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
 
-pub type QueryInterface = extern fn(*const c_void, *const i8, *mut *mut c_void) -> i32;
+
+// Functions defined for all types compatible with FUnknown
+
+
+pub type QueryInterfaceFnType = extern fn(*const c_void, *const i8, *mut *mut c_void) -> i32;
+pub unsafe fn query_interface_impl<T: Interface>(this: *const c_void, func: QueryInterfaceFnType) -> T {
+    let mut vtable_ptr: *mut c_void = std::mem::uninitialized();
+    let tuid = T::get_id();
+
+    let result = func(
+        this,
+        tuid.as_ptr() as *const i8,
+        &mut vtable_ptr as *mut *mut c_void
+    );
+
+    let obj = T::new(vtable_ptr);
+    obj
+}
+
+
+// FUnknown struct
+
 
 pub struct FUnknown {
     inner: *const FUnknownImpl,
@@ -9,17 +30,7 @@ pub struct FUnknown {
 
 impl FUnknown {
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
-        let mut vtable_ptr: *mut c_void = std::mem::uninitialized();
-        let tuid = T::get_id();
-
-        let result = ((*(*self.inner).vtable).query_interface)(
-            self.inner as *const c_void,
-            tuid.as_ptr() as *const i8,
-            &mut vtable_ptr as *mut *mut c_void
-        );
-
-        let obj = T::new(vtable_ptr);
-        obj
+        query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
     }
 
     pub fn hello(&self) {
@@ -40,6 +51,8 @@ impl Interface for FUnknown {
 }
 
 
+// Private implementation
+
 
 #[derive(Debug)]
 #[repr(C)]
@@ -51,7 +64,7 @@ struct FUnknownImpl {
 #[repr(C)]
 struct FUnknownVTable {
     // FUnknown
-    query_interface: QueryInterface,
+    query_interface: QueryInterfaceFnType,
     f1: *const c_void, // TODO
     f2: *const c_void, // TODO
 }
