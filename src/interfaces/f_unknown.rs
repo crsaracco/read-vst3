@@ -20,6 +20,16 @@ pub unsafe fn query_interface_impl<T: Interface>(this: *const c_void, func: Quer
     obj
 }
 
+pub type AddRefFnType = extern fn(*const c_void) -> u32;
+pub unsafe fn add_ref_impl(this: *const c_void, func: AddRefFnType) -> u32 {
+    func(this)
+}
+
+pub type ReleaseFnType = extern fn(*const c_void) -> u32;
+pub unsafe fn release_impl(this: *const c_void, func: ReleaseFnType) -> u32 {
+    func(this)
+}
+
 
 // FUnknown struct
 
@@ -31,6 +41,14 @@ pub struct FUnknown {
 impl FUnknown {
     pub unsafe fn query_interface<T: Interface>(&self) -> T {
         query_interface_impl(self.inner as *const c_void, (*(*self.inner).vtable).query_interface)
+    }
+
+    pub unsafe fn add_ref(&self) -> u32 {
+        add_ref_impl(self.inner as *const c_void, (*(*self.inner).vtable).add_ref)
+    }
+
+    pub unsafe fn release(&self) -> u32 {
+        release_impl(self.inner as *const c_void, (*(*self.inner).vtable).release)
     }
 
     pub fn hello(&self) {
@@ -65,6 +83,6 @@ struct FUnknownImpl {
 struct FUnknownVTable {
     // FUnknown
     query_interface: QueryInterfaceFnType,
-    f1: *const c_void, // TODO
-    f2: *const c_void, // TODO
+    add_ref: AddRefFnType,
+    release: ReleaseFnType,
 }

@@ -1,6 +1,6 @@
 use std::os::raw::c_void;
 use crate::interfaces::Interface;
-use crate::interfaces::f_unknown::{eryInterfaceFnType, query_interface_impl};
+use crate::interfaces::f_unknown::{QueryInterfaceFnType, query_interface_impl};
 
 pub struct CPluginFactory {
     inner: *const CPluginFactoryImpl,
